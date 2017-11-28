@@ -1,5 +1,5 @@
 import java.io.BufferedReader;
-import java.util.Iterator;
+import java.util.Date;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -13,9 +13,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -29,37 +28,37 @@ public class JsonParser {
 	private static String line;
 	private static File file = new File(System.getProperty("user.dir")+"//vakit.txt");
 	private static FileWriter fw;
+	//contain json  of one day
+	private static JSONObject day_raw;
+    //contain json  of Dates
+    private static JSONObject date_raw;
+    //contain json  of readable date
+    private static String date_readable;
+	
 void parseJson() throws FileNotFoundException, IOException, ParseException {
 	JSONParser parser = new JSONParser();
 	 
     try {
 
         Object obj = parser.parse(new FileReader(System.getProperty("user.dir")+"//vakit.txt"));
-
-        JSONObject jsonObject = (JSONObject) obj; //contain raw json data
+     
+        //contain raw json data
+        JSONObject jsonObject = (JSONObject) obj; 
         //System.out.println(jsonObject);
         
+        //contain Json Array of all data
         JSONArray data = (JSONArray) jsonObject.get("data");
-        //date
-        JSONObject tmp;
-        JSONObject date;
-        JSONObject date_readable;
-        String readable;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy");
-        LocalDate localDate;
-        localDate = LocalDate.parse("01 Nov 2017", formatter);
-        System.out.println(localDate);
-        for (int i = 0; i < data.size(); i++) {
-        	 tmp =  (JSONObject) data.get(i);
-        	 date = (JSONObject) tmp.get("date");
-        	 readable = (String) date.get("readable");
-        	 
-			
-		}
+        
+        if(getIndexOfDate(data) == -1) {
+        	System.out.println("could not find date in db!");
+        }
+        
+        
+        
        
     }finally {
 		
-}
+    }
 }
 void replaceEnd() throws IOException {
 	Path path = Paths.get(System.getProperty("user.dir")+"//vakit.txt");
@@ -69,10 +68,23 @@ void replaceEnd() throws IOException {
 	content = content.replace(" (CET)", "");
 	Files.write(path, content.getBytes(charset));
 	}
-int getIndexOfDate(JSONArray date) {
+int getIndexOfDate(JSONArray data) {
 	
-	//for(int i = 0;i<date.)
-	return 0;
+	DateFormat df = new SimpleDateFormat("d MMM yyyy");
+	//Format system date in custom date to compare dates
+	String today = df.format(new Date());
+	 for (int i = 0; i < data.size(); i++) {
+		 day_raw =  (JSONObject) data.get(i);
+    	 date_raw = (JSONObject) day_raw.get("date");
+    	 date_readable = (String) date_raw.get("readable");
+    	 
+    	 if(today.equals(date_readable)){
+    		 //System.out.println(i);
+    		 return i;
+    	 }
+	 }
+	
+	return -1;
 	
 }
 void getUrl() {
